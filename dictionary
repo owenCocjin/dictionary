@@ -1,5 +1,5 @@
 #!/bin/bash
-
+ 
 ## ---------- FUNCTIONS -----------#
 function usage(){
 	echo -e '''
