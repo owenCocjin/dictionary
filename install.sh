@@ -34,7 +34,7 @@ if [[ -d "/home/$curUser/.dictionary" ]]; then
 		echo -e "\tLeaving .dictionary alone!"
 	fi
 else
-	mkdir /home/$curUser/.dictionary
+	cp -r ./.dictionary /home/$curUser/
 fi
 
 #Copy dictionary_py to .dictionary
@@ -55,6 +55,7 @@ if [[ -d "/home/$curUser/.dictionary" ]]; then
 		echo -e "\t\e[92m[\e[34m|\e[92mX]\e[0m Creation/Editting of saved_words.txt failed!"
 		exit 1
 	fi
+
 else
 	#Checks if .dictionary exists/was created
 	echo -e "\e[31m[\e[34m|\e[31mX]\e[0m /home/$curUser/.dictionary not found!"
