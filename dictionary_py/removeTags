@@ -6,7 +6,7 @@
 # 1 is '{}'
 import sys, time
 from line import Line
-
+ 
 def main():
 	#Remove HTML tags and Javascript/CSS
 	total=-1
