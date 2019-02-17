@@ -1,5 +1,5 @@
 #!/bin/bash
-
+ 
 #Set curUser
 curUser=$( logname )
 
