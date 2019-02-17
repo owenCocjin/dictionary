@@ -40,7 +40,7 @@ fi
 #Copy dictionary_py to .dictionary
 if [[ -d "/home/$curUser/.dictionary" ]]; then
 	#Copy dictionary_py to .dictionary
-	echo "Copying dictionary_py to /home/$curUser/.dictionary/..."
+	echo "Copying dictionary_py to /home/$curUser/.dictionary/"
 	cp -r ./dictionary_py /home/$curUser/.dictionary
 	if [[ "$?" != '0' ]]; then
 		echo -e "\t\e[92m[\e[34m|\e[92mX]\e[0m Copying of dictionary_py failed!"
@@ -50,12 +50,13 @@ if [[ -d "/home/$curUser/.dictionary" ]]; then
 	#Copy word save file to .dictionary
 	echo "Copying saved_words to /home/$curUser/.dictionary/"
 	cp ./saved_words.txt /home/$curUser/.dictionary/
+	chown $curUser:$curUser /home/$curUser/.dictionary/saved_words.txt
 	if [[ "$?" != '0' ]]; then
-		echo -e "\t\e[92m[\e[34m|\e[92mX]\e[0m Creation of saved_words.txt failed!"
+		echo -e "\t\e[92m[\e[34m|\e[92mX]\e[0m Creation/Editting of saved_words.txt failed!"
 		exit 1
 	fi
 else
-	#Checks id .dictionary exists/was created
+	#Checks if .dictionary exists/was created
 	echo -e "\e[31m[\e[34m|\e[31mX]\e[0m /home/$curUser/.dictionary not found!"
 	exit 1
 fi
