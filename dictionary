@@ -53,7 +53,6 @@ else
 	mkdir /tmp/dictionary
 	cat /dev/null > /tmp/dictionary/dict_file
 fi
-dict_file="/tmp/dictionary/dict_file"
 direct="/tmp/dictionary/"
 
 ## ------- CATCHING FLAGS ------- ##
@@ -67,7 +66,6 @@ while getopts ":w:thds" opts; do
 		;;
 		t)
 			direct="./"
-			dict_file="./dict_file"
 		;;
 		s)
 			save=1
@@ -104,11 +102,11 @@ if [[ "$direct" == './' ]]; then
 	if [[ "$rec" == 'y' ]]; then
 		:
 	else
-		curl -L https://www.merriam-webster.com/dictionary/$word > $dict_file 2>/dev/null
+		curl -L https://www.merriam-webster.com/dictionary/$word > dict_file 2>/dev/null
 		:
 	fi
 else
-	curl -L https://www.merriam-webster.com/dictionary/$word > $dict_file 2>/dev/null
+	curl -L https://www.merriam-webster.com/dictionary/$word > dict_file 2>/dev/null
 fi
 
 if [[ "$?" == '6' ]]; then
@@ -123,18 +121,35 @@ fi
 #sR==Starting row, eR=Ending row
 #sR will waways be 318, but it is decided dynamically just in case the dictionary
 #webside changes (This will potentially prevent the scritp from breaking)
-sR=$( grep -n 'class="hword"' $dict_file | awk -F':' 'NR==1 { print $1 }' )
-awk -v sR="$sR" 'NR>sR {print > "d"}' $dict_file
+sR=$( grep -n 'class="hword"' dict_file | awk -F':' 'NR==1 { print $1 }' )
+awk -v sR="$sR" 'NR>sR {print > "d"}' dict_file
 
 #Writes the stripped webpage into dict_file
-cat d | /home/$USER/.dictionary/dictionary_py/removeTags > $dict_file
-partOfSpeach=$( sed '1q;d' $dict_file )
-pronunciation=$( sed -e '2q;d' -e 's/[\\]* *//' $dict_file)
+cat d | /home/$USER/.dictionary/dictionary_py/removeTags > dict_file
+partOfSpeach=$( awk -F'[^a-zA-Z]' 'NR==1 {print $1}' dict_file )
+pronunciation=$( grep -e 'ˈ' dict_file | head -n 1 | sed 's/ˈ//')    #Assume pronunciation starts with a \
 
+#Removes leading '\' for proper output
+if [[ "${pronunciation:0:1}" != '\' ]];then
+	pronunciation='\ '$pronunciation
+fi
+echo -n > ./d    #Wipe d file to store definitions. This will make them easier to save
+grep '^:' dict_file | awk -F': ' 'NR<=5 {print toupper(substr($2,1,1)) substr($2,2) >> "d"}'
+
+#Print the results all formatted and pretty :D!
 echo -e """
 \e[1mWord:\e[0m\t\e[5m$word\e[0m
 \t\e[2m$pronunciation \\
 \t$partOfSpeach\e[0m
 \n\e[1mDefinition(s):\e[0m
-$( grep '^:' dict_file | awk -F':' 'NR<=5 {print "\t"NR") "$2}' )
 """
+awk '{print "\t"NR") "$0}' ./d
+
+if [[ "$save" == '1' ]]; then
+	toSave=""
+	echo "Saving word..."
+	toSave+=$word":"$pronunciation":"$partOfSpeach":"
+ 	toSave+=$( awk '{printf "%s:",$0} END {print "\n"}' d )
+	echo $toSave >> /home/$USER/.dictionary/saved_words.txt
+	echo "Saved!"
+fi
