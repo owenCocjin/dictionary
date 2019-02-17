@@ -1,0 +1,46 @@
+#!/usr/bin/python3
+
+# The first cmd line argument is the lines to print:
+# The second argument from the cmd line tag to remove
+# Default is '<>'
+# 1 is '{}'
+import sys, time
+from line import Line
+
+def main():
+	#Remove HTML tags and Javascript/CSS
+	total=-1
+	curLine=1
+	stripped=Line('')
+
+	#Check arguments
+	try:
+		total=int(sys.argv[1])
+	except:
+		pass
+	try:
+		if int(sys.argv[2])==1:
+			stripped=Line('', '{', '}')
+	except:
+		pass
+
+
+	#Line.toggleVerbose()
+	for line in sys.stdin:
+		curLine+=1
+		stripped.setLine(line)
+		#stripped.toggleRude()
+		#time.sleep(1.5)
+
+		#print("Line: {}".format(stripped))
+		stripped.stripLine()
+
+		if stripped.getLine()!="":
+			#print("Got line: {}".format(stripped))
+			print(stripped)
+			total-=1
+		if total==0:
+			break
+
+if __name__=="__main__":
+	main()
