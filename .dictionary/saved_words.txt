@@ -1,2 +1,0 @@
-#Format:
-#    WORD:pronunciation:POS:def1:def2:...:defn:

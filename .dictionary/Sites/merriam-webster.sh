@@ -1,15 +1,5 @@
 #!/bin/bash
 
-#Get the word html
-curl -L https://www.merriam-webster.com/dictionary/$( cat dict_pipe ) > dict_file 2>/dev/null
-if [[ "$?" == '6' ]]; then
-	echo "curl could not resolve host (Check internet connection)"
-elif [[ "$?" == '0' ]]; then
-	echo "ugh"
-else
-	:
-fi
-
 #Cut out only the relevent tag
 #sR==Starting row
 #sR will always be 318, but it is decided dynamically just in case the dictionary
