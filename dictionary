@@ -3,8 +3,7 @@
 #Author: Owen Cocjin
 #Version: 0.2
 #Update notes:
-#		Added ability to select which website to pull from
-#		Fixed general issues
+#		Fixed saving issues/sorting method
 
 ## ---------- FUNCTIONS -----------#
 function usage(){
@@ -43,6 +42,7 @@ local_dict='0'
 save='0'
 for lastArg in "$@"; do :; done #Assigns $lastArg the last argument
 site="merriam-webster.sh"
+utils="/home/$USER/.dictionary"
 
 ## -------- CHECKING FOR DIRECTORIES ---------- ##
 if [[ ! -d /tmp/dictionary ]]; then
@@ -110,7 +110,15 @@ elif [[ -z "$word" ]]; then
 fi
 
 ## -------- MAIN -------- ##
-echo "$word" > dict_pipe &
+#Get the word html
+curl -L https://www.merriam-webster.com/dictionary/$word > dict_file 2>/dev/null
+if [[ "$?" == '6' ]]; then
+	error "curl could not resolve host (Check internet connection)"
+	#echo -n "Use offline library (y/n)?: "
+elif [[ "$?" == '0' ]]; then
+	error
+fi
+
 if [[ "$direct" == './' ]]; then
 	echo -n "Test detected! Use local files (y/n)?: "
 	read rec
@@ -138,11 +146,17 @@ echo -e """
 """
 awk '{print "\t"NR") "$0} END {print ""}' d
 
+#Saves the word and sorts, if -s flag is passed.
+#Send sort command into the background to prevent terminal from stalling
 if [[ "$save" == '1' ]]; then
+	echo "Saving..."
 	toSave=""
 	toSave+=$word":"$pronunciation":"$partOfSpeach":"
  	toSave+=$( awk '{printf "%s:",$0} END {print "\n"}' d )
-	lineNo=$( grep -n "me" test | awk -F':' '{print $1}' )
-	echo $toSave >> /home/$USER/.dictionary/saved_words.txt
-	sort -o /home/$USER/.dictionary/saved_words.txt /home/$USER/.dictionary/saved_words.txt
+	lineNo=$( grep -n "$word" /home/$USER/.dictionary/saved_words.txt | awk -F':' '{print $1}' )
+	if [[ lineNo != '' ]]; then
+		echo $toSave >> /home/$USER/.dictionary/saved_words.txt
+		sort -o $utils/saved_words.txt $utils/saved_words.txt &
+	fi
+	echo "Saved!"
 fi
