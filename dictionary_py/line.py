@@ -8,6 +8,7 @@ class Line:
 		self.eChar=eChar
 		self.originalLine=line
 		self.line=line.strip('\n\t ')
+		self.count=0
 
 	def __str__(self):
 		return(self.line)
@@ -24,15 +25,26 @@ class Line:
 
 		while True:
 			#time.sleep(1)
+			self.count+=1
+
+			#Prevent infinite looping, break if count==5
+			if self.count==5:
+				v('Someting went wrong! Returning a null line')
+				self.line=''
+				self.count=0
+				break
+
 			v('Top again!')
+			v('Count: {}'.format(self.count))
 			preStrip=self.line #Save the line before stripping
 			line=preStrip.strip('\n\t ')
 
 			if x>=0:
 				line=line[:x]+line[y+1:]
 				self.line=line.strip('\n\t ')
-				count=0
+				self.count=0
 			elif x*y==1:
+				self.count=0
 				break
 			else:
 				v(self.error(loc='-'))
@@ -46,6 +58,7 @@ class Line:
 			if y<x or y==-1 and x>=0 or x==-1 and y>=0:
 				if Line.rude==1:
 					self.line=''
+					self.count=0
 					break
 
 				line=self.line #Before all checking
@@ -71,7 +84,7 @@ class Line:
 					x=self.line.find(self.sChar)
 					y=self.line.find(self.eChar)
 					v("New x&y: {}, {}".format(x, y))
-					count=0
+					self.count=0
 
 				#If all checks failed, return line as blank
 				elif result==line:
@@ -84,6 +97,7 @@ class Line:
 				#so keep stripping
 				else:
 					v("Continuing!")
+					self.count=0
 					continue
 				v("Uhhh... {}".format(result==line))
 
