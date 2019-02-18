@@ -30,14 +30,14 @@ if [[ -d "/home/$curUser/.dictionary" ]]; then
 	if [[ "$rec" == 'y' ]] || [[ "$rec" == 'yes' ]]; then
 		rm -rf /home/$curUser/.dictionary
 		cp -r ./.dictionary /home/$curUser/
-		mv /home/$curUser/.dictionary/saved_words.txt /home/$curUser/.dictionary
+		touch /home/$curUser/.dictionary/saved_words.txt
 		chown $curUser:$curUser /home/$curUser/.dictionary/saved_words.txt
 	else
 		echo -e "\tLeaving .dictionary alone!"
 	fi
 else
 	cp -r ./.dictionary /home/$curUser/
-	mv /home/$curUser/.dictionary/saved_words.txt /home/$curUser/.dictionary
+	touch /home/$curUser/.dictionary/saved_words.txt
 	chown $curUser:$curUser /home/$curUser/.dictionary/saved_words.txt
 fi
 
