@@ -29,7 +29,7 @@ if [[ -d "/home/$curUser/.dictionary" ]]; then
 	read rec
 	if [[ "$rec" == 'y' ]] || [[ "$rec" == 'yes' ]]; then
 		rm -rf /home/$curUser/.dictionary
-		mkdir /home/$curUser/.dictionary
+		cp -r ./.dictionary /home/$curUser/
 	else
 		echo -e "\tLeaving .dictionary alone!"
 	fi
@@ -44,15 +44,6 @@ if [[ -d "/home/$curUser/.dictionary" ]]; then
 	cp -r ./dictionary_py /home/$curUser/.dictionary
 	if [[ "$?" != '0' ]]; then
 		echo -e "\t\e[92m[\e[34m|\e[92mX]\e[0m Copying of dictionary_py failed!"
-		exit 1
-	fi
-
-	#Copy word save file to .dictionary
-	echo "Copying saved_words to /home/$curUser/.dictionary/"
-	cp ./saved_words.txt /home/$curUser/.dictionary/
-	chown $curUser:$curUser /home/$curUser/.dictionary/saved_words.txt
-	if [[ "$?" != '0' ]]; then
-		echo -e "\t\e[92m[\e[34m|\e[92mX]\e[0m Creation/Editting of saved_words.txt failed!"
 		exit 1
 	fi
 
