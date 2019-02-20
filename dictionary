@@ -1,9 +1,20 @@
 #!/bin/bash
 
 #Author: Owen Cocjin
-#Version: 0.2
+#Version: 0.3
 #Update notes:
-#		Fixed saving issues/sorting method
+#	Added proper support of saving words:
+# 	When saving a word, user can use either -o flag to retrieve a saved word,
+#		or if curl failed to get site, it will try fetching from saved words
+#	Fixed error codes
+#
+#General notes:
+#		Exit codes:
+#			0=All good!
+#			1=General error
+#			2=Word not found
+#	    6=Curl couldn't reach host
+#			999=Unknown
 
 ## ---------- FUNCTIONS -----------#
 function usage(){
@@ -31,9 +42,49 @@ function error(){
 	err="$1"
 	if [[ -z "$1" ]]; then
 		err="Unknown Error!"
+		2="999"
 	fi
 	echo -e "\e[31;1m[\e[34m|\e[31mX]\e[0m Error: $err"
-	exit 1
+	if [[ -z "$3" ]]; then
+		if [[ ! -z "$2" ]]; then
+			exit $2
+		else
+			exit 1
+		fi
+	else
+		:
+	fi
+}
+
+function printWord(){
+	#Print the results all formatted and pretty :D
+	echo -e """
+	\e[1mWord:\e[0m\t\e[5m$word\e[0m
+	\t\e[2m\\ ${pronunciation} \\
+	\t$partOfSpeach\e[0m
+	\n\e[1mDefinition(s):\e[0m\
+	"""
+	awk '{print "\t"NR") "$0} END {print ""}' d
+}
+
+function findWord(){
+	word="$1"
+	rec=$( grep -i "${1}:" $utils/saved_words.txt | head -n 1 )
+	if [[ ! -z "$rec" ]]; then
+		declare $( echo "$rec" | awk -F':' '{
+			print "pronunciation="$2
+			print "partOfSpeach="$3
+		}' )
+		echo "$rec" | awk -F':' '{
+			printf "" > "d"
+			for(i=4; i<NF; ++i)
+				print $i >> "d"
+		}'
+		printWord
+		exit 0
+	else
+		error "Word Not Found!" 2 $2
+	fi
 }
 
 ## ------ VARIABLES --------- ##
@@ -43,6 +94,7 @@ save='0'
 for lastArg in "$@"; do :; done #Assigns $lastArg the last argument
 site="merriam-webster.sh"
 utils="/home/$USER/.dictionary"
+offLine=0
 
 ## -------- CHECKING FOR DIRECTORIES ---------- ##
 if [[ ! -d /tmp/dictionary ]]; then
@@ -70,9 +122,10 @@ if [[ "$?" != '0' ]]; then
 	:
 fi
 direct="/tmp/dictionary/"
+cd $direct
 
 ## ------- CATCHING FLAGS ------- ##
-while getopts ":w:thds" opts; do
+while getopts ":w:hdso" opts; do
 	case $opts in
 		w)
 			if [[ "${OPTARG:0:1}" == '-' ]]; then
@@ -80,21 +133,30 @@ while getopts ":w:thds" opts; do
 			fi
 			word=$OPTARG
 		;;
-		t)
-			direct="./"
-		;;
 		s)
 			save=1
 		;;
 		d)
 			local_dict=1
 		;;
+		o)
+			offLine=1
+			if [[ -z "$word" ]]; then
+				if [[ "${lastArg:0:1}" != '-' ]]; then
+				findWord "$lastArg"
+				else
+					usage
+				fi
+			else
+				findWord "$word"
+			fi
+			exit 1
+		;;
 		h|-|*)
 			usage
 		;;
 	esac
 done
-cd $direct
 
 #If only one argument/first arg doesn't start with '-', assume it was the word
 #Alternatively, if no argument is given, throw up usage
@@ -110,53 +172,38 @@ elif [[ -z "$word" ]]; then
 fi
 
 ## -------- MAIN -------- ##
+#Uses offline dictionary
 #Get the word html
 curl -L https://www.merriam-webster.com/dictionary/$word > dict_file 2>/dev/null
 if [[ "$?" == '6' ]]; then
-	error "curl could not resolve host (Check internet connection)"
-	#echo -n "Use offline library (y/n)?: "
+	findWord $word 'No'
+	error "curl could not resolve host (Check internet connection)" 6
 elif [[ "$?" == '0' ]]; then
 	error
 fi
 
-if [[ "$direct" == './' ]]; then
-	echo -n "Test detected! Use local files (y/n)?: "
-	read rec
-	if [[ "$rec" == 'y' ]]; then
-		:
-	else
-		/home/$( whoami )/.dictionary/Sites/$site
-		:
-	fi
-else
-	/home/$( whoami )/.dictionary/Sites/$site
-fi
+#Use modile to grab word info
+/home/$( whoami )/.dictionary/Sites/$site
 
 #Assign the variables
 rec=$( cat dict_pipe )
-pronunciation=$( echo "$rec" | awk -F':' '{print $1}' )' \'
+pronunciation=$( echo "$rec" | awk -F':' '{print $1}' )
 partOfSpeach=$( echo "$rec" | awk -F':' '{print $2}' )
 
-#Print the results all formatted and pretty :D
-echo -e """
-\e[1mWord:\e[0m\t\e[5m$word\e[0m
-\t\e[2m$pronunciation
-\t$partOfSpeach\e[0m
-\n\e[1mDefinition(s):\e[0m\
-"""
-awk '{print "\t"NR") "$0} END {print ""}' d
+printWord
 
 #Saves the word and sorts, if -s flag is passed.
 #Send sort command into the background to prevent terminal from stalling
 if [[ "$save" == '1' ]]; then
-	echo "Saving..."
 	toSave=""
 	toSave+=$word":"$pronunciation":"$partOfSpeach":"
  	toSave+=$( awk '{printf "%s:",$0} END {print "\n"}' d )
-	lineNo=$( grep -n "$word" /home/$USER/.dictionary/saved_words.txt | awk -F':' '{print $1}' )
-	if [[ lineNo != '' ]]; then
+	lineNo=$( grep -n "$word" $utils/saved_words.txt | awk -F':' '{print $1}' )
+	testRepeat=$( grep -i "${word}:" $utils/saved_words.txt )
+	if [[ lineNo != '' ]] && [[ -z "$testRepeat" ]]; then
+		echo "Saving Word..."
 		echo $toSave >> /home/$USER/.dictionary/saved_words.txt
 		sort -o $utils/saved_words.txt $utils/saved_words.txt &
+		echo "Saved!"
 	fi
-	echo "Saved!"
 fi
