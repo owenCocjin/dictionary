@@ -10,7 +10,7 @@ awk -v sR="$sR" 'NR>sR {print > "d"}' dict_file
 #Stripping html tags and identifying needed variables
 head -n 500 d | /home/$USER/.dictionary/dictionary_py/removeTags > dict_file
 partOfSpeach=$( awk -F'[^a-zA-Z]' 'NR==1 {print $1}' dict_file )
-pronunciation='\ '$( grep -e 'ˈ' dict_file | head -n 1 | sed 's/[|\ ]*//')    #Assume pronunciation starts with a \
+pronunciation=$( grep -e 'ˈ' dict_file | head -n 1 | sed 's/[|\ ]*//')    #Assume pronunciation starts with a \
 
 #Create string and send to dict_pipe
 toSend=${pronunciation}:${partOfSpeach}
