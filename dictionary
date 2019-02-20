@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #Author: Owen Cocjin
-#Version: 0.3
+#Version: 0.3.2
 #Update notes:
 #	Added proper support of saving words:
 # 	When saving a word, user can use either -o flag to retrieve a saved word,
@@ -58,13 +58,14 @@ function error(){
 
 function printWord(){
 	#Print the results all formatted and pretty :D
+	word=$( tr '[:lower:]' '[:upper:]' <<< ${word:0:1})$( tr '[:upper:]' '[:lower:]' <<< ${word:1})
 	echo -e """
 	\e[1mWord:\e[0m\t\e[5m$word\e[0m
 	\t\e[2m\\ ${pronunciation} \\
 	\t$partOfSpeach\e[0m
-	\n\e[1mDefinition(s):\e[0m\
+	\n\e[1m\tDefinition(s):\e[0m\
 	"""
-	awk '{print "\t"NR") "$0} END {print ""}' d
+	awk '{print "\t\t"NR") "$0} END {print ""}' d
 }
 
 function findWord(){
@@ -196,6 +197,7 @@ printWord
 #Send sort command into the background to prevent terminal from stalling
 if [[ "$save" == '1' ]]; then
 	toSave=""
+	word=$( tr '[:upper:]' '[:lower:]' <<< ${word} )
 	toSave+=$word":"$pronunciation":"$partOfSpeach":"
  	toSave+=$( awk '{printf "%s:",$0} END {print "\n"}' d )
 	lineNo=$( grep -n "$word" $utils/saved_words.txt | awk -F':' '{print $1}' )
