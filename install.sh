@@ -47,7 +47,7 @@ if [[ -d "/home/$curUser/.dictionary" ]]; then
 	echo "Copying dictionary_py to /home/$curUser/.dictionary/"
 	cp -r ./dictionary_py /home/$curUser/.dictionary
 	if [[ "$?" != '0' ]]; then
-		echo -e "\t\e[92m[\e[34m|\e[92mX]\e[0m Copying of dictionary_py failed!"
+		echo -e "\t\e[31m[\e[34m|\e[31mX]\e[0m Copying of dictionary_py failed!"
 		exit 1
 	fi
 
@@ -57,5 +57,24 @@ else
 	exit 1
 fi
 
+#Copy dict.config file to /etc/dictionary
+if [[ -f '/etc/dictionary/dict.config' ]]; then
+	echo -en "\e[92m[\e[34m|\e[92mX]\e[0m dict.config already exists, over-write(y/n)?: "
+	read over
+	if [[ "$rec" == 'y' ]] || [[ "$rec" == 'yes' ]]; then
+		rm /etc/dictionary/dict.config
+		cp ./dict.config /etc/dictionary/
+	else
+		echo -e "\tLeaving dict.config alone!"
+	fi
+else
+	mkdir /etc/dictionary/
+	cp ./dict.config /etc/dictionary
+fi
+
+#Check if dict.config was copied successfully
+if [[ ! -f /etc/dictionary/dict.config ]]; then
+	echo -e "\t\e[31m[\e[34m|\e[31mX]\e[0m Copying of dict.config failed!"
+fi
 
 echo "Done!"
