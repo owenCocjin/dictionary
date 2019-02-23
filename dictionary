@@ -16,7 +16,7 @@
 #	   	6=Curl couldn't reach host
 #			999=Unknown
 
-## ---------- FUNCTIONS -----------#
+## ---------- FUNCTIONS ----------- ##
 function usage(){
 	echo -e '''
 \e[33mUsage:\e[0m dictionary [-wth] [VALUES] \e[3mWORD\e[0m
@@ -97,14 +97,8 @@ function findWord(){
 	fi
 }
 
-## ------ VARIABLES --------- ##
-word=""
-local_dict='0'
-save='0'
-for lastArg in "$@"; do :; done #Assigns $lastArg the last argument
-site="merriam-webster.sh"
-utils="/home/$USER/.dictionary"
-offLine=0
+## ------ SOURCING CONFIG FILE --------- ##
+. /etc/dictionary/dict.config
 
 ## -------- CHECKING FOR DIRECTORIES ---------- ##
 if [[ ! -d /tmp/dictionary ]]; then
@@ -192,7 +186,7 @@ elif [[ "$?" == '0' ]]; then
 	error
 fi
 
-#Use modile to grab word info
+#Use module to grab word info
 /home/$( whoami )/.dictionary/Sites/$site
 
 #Assign the variables
