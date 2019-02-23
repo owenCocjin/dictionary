@@ -28,9 +28,16 @@ fi
 #Remove /tmp/dictionary
 rm -rf /tmp/dictionary 2>/dev/null
 if [[ -d "/tmp/dictionary" ]]; then
-	echo "\e[31m[\e[34m|\e[31mX]\e[0m Failed to remove temp directory! This shouldn't be an issues as files \
+	echo -e "\e[31m[\e[34m|\e[31mX]\e[0m Failed to remove temp directory! This shouldn't be an issues as files \
 	in /tmp are normally deleted automatically.
 	(You can try manually removing /tmp/dictionary and re-running uninstaller)"
+fi
+
+#Remove /etc/dictionary
+rm -rf /etc/dictionary
+if [[ -d "/etc/dictionary" ]]; then
+	echo "\e[31m[\e[34m|\e[31mX]\e[0m Failed to remove temp directory!
+	(You can try manually removing /etc/dictionary and re-running uninstaller)"
 fi
 
 echo "Everything's gone! Thanks for using my dictionary!"
