@@ -6,7 +6,8 @@ OR
 run the *dictionary* script itself.
 If install.sh is not run, some functionality will be lost
 ## Usage
-'''
-	dictionary hot
-	dictionary -s hot
-'''
+```
+dictionary hot
+dictionary -s hot
+```
+
