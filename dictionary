@@ -67,10 +67,10 @@ function printWord(){
 		#Print the results all formatted and pretty :D
 		word=$( tr '[:lower:]' '[:upper:]' <<< ${word:0:1})$( tr '[:upper:]' '[:lower:]' <<< ${word:1})
 		echo -e """
-		\e[1mWord:\e[0m\t\e[5m$word\e[0m
+		\e[1m Word:\e[0m\t\e[5m$word\e[0m
 		\t\e[2m\\ ${pronunciation} \\
 		\t$partOfSpeach\e[0m
-		\n\e[1m\tDefinition(s):\e[0m\
+\n\e[1m\tDefinition(s):\e[0m\
 		"""
 		awk '{print "\t\t"NR") "$0} END {print ""}' d
 	fi
