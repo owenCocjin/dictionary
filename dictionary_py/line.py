@@ -22,6 +22,7 @@ class Line:
 		line=self.line
 		x=line.find(self.sChar)
 		y=line.find(self.eChar)
+		v('sChar={}\teChar={}'.format(self.sChar, self.eChar))
 
 		while True:
 			#time.sleep(1)
@@ -136,20 +137,21 @@ class Line:
 
 	def checkOpenTag(self, line):
 		pre=line #Saves line before checking
-
+		v(self.warning('Checking for open tag...', 'O'))
 		#Check open
-		x=line.find('<')
-		y=line.find('>')
+		x=line.find(self.sChar)
+		y=line.find(self.eChar)
 		if y<x or y>=0 and x==-1:
 			result=line[y+1:]
 
 		#Check close
-		x=line.rfind('<')
-		y=line.rfind('>')
+		x=line.rfind(self.sChar)
+		y=line.rfind(self.eChar)
 		if y<x or y==-1:
 			result=line[:x]
 
-		v("RESULT: {}".format(result))
+		v(self.warning("RESULT: {}".format(result), 'O'))
+		v(self.warning("ORIGINAL: {}".format(pre), 'O'))
 		return(result)
 
 	def getLine(self):
