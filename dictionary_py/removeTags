@@ -1,42 +1,94 @@
 #!/usr/bin/python3
 
-# The first cmd line argument is the lines to print:
-# The second argument from the cmd line tag to remove
-# Default is '<>'
-# 1 is '{}'
 import sys, time
 from line import Line
 
+## ------------- FUNCTIONS ------------ ##
+def usage():
+	print('''
+\033[33mUsage:  \033[0mremoveTag [-th] [VALUES]
+\tRemoves HTML and Javascript tags from a piped line
+
+\033[33mArguments:\033[0m
+\t-t, --tag=TAG_NUMBER\tSets tags to remove:\033[2m
+\t\t\t\tDefault is '<>'
+\t\t\t\t1 is '{}'\033[0m
+\t-h, --help\tPrints this screen
+	''')
+	exit(1)
+
+def error(message="Unknown Error!", exitValue=1):
+	print("\033[31m[\033[34m|\033[31mX]\033[0m Error: {}".format(message))
+	exit(exitValue)
+
+## -------------------- MAIN -------------------- ##
 def main():
 	#Remove HTML tags and Javascript/CSS
 	total=-1
 	curLine=1
 	stripped=Line('')
+	allTags=False
 
-	#Check arguments
-	try:
-		total=int(sys.argv[1])
-	except:
-		pass
-	try:
-		if int(sys.argv[2])==1:
-			stripped=Line('', '{', '}')
-	except:
-		pass
+	#Parse arguments
+	for i in range(1, len(sys.argv)):
+		if sys.argv[i].strip('1234567890=') in ['-t', '--tag']:
+			try:
+				if sys.argv[i+1]=='1':
+					stripped=Line('', '{', '}')
+					continue
+				elif sys.argv[i+1]=='2':
+					stripped=Line('', '(', ')')
+			except IndexError:
+				if sys.argv[i][-1]=='1':
+					stripped=Line('', '{', '}')
+				elif sys.argv[i][-1]=='2':
+					stripped=Line('', '(', ')')
+			except:
+				usage()
+		elif sys.argv[i] in ['-h', '--help']:
+			usage()
+		elif sys.argv[i]=='-v':
+			Line.toggleVerbose()
+		elif sys.argv[i]=='-a':
+			allTags=True
+		elif sys.argv[i].strip('1234567890=') in ['-l', '--lines']:
+			pos=sys.argv[i].find('=')
+			if pos==-1:
+				try:
+					total=int(sys.argv[i+1])
+				except ValueError:
+					error("Something went wrong. Try using --help")
+				except:
+					usage()
+			else:
+				try:
+					total=int(sys.argv[i][pos+1:])
+				except ValueError:
+					error("Something went wrong. Try using --help")
+				except:
+					usage()
+		elif sys.argv[i][0]!='-':
+			if sys.argv[i-1] in ['-t', '-l']:
+				continue
+			else:
+				error("Something went wrong. Try using --help")
+		elif sys.argv[i] not in ['-t', '--test', '-h', '--help']:
+			error("Something went wrong. Try using --help")
 
-	#Line.toggleVerbose()
 	for line in sys.stdin:
 		curLine+=1
 		stripped.setLine(line)
-		#stripped.toggleRude()
-		#time.sleep(1.5)
-
-		#print("Line: {}".format(stripped))
-		stripped.stripLine()
+		if allTags:
+			for i in ['<>', '{}', '()']:
+				stripped.setSChar(i[0])
+				stripped.setEChar(i[1])
+				stripped.stripLine()
+		else:
+			stripped.stripLine()
 
 		if stripped.getLine()!="":
 			#print("Got line: {}".format(stripped))
-			print(stripped)
+			print(stripped, end='\n\n')
 			total-=1
 		if total==0:
 			break
