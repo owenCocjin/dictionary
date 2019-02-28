@@ -1,0 +1,91 @@
+#!/bin/python3
+
+#Author: Owen Cocjin
+#Version: 0.1.0
+#Update notes:
+#	- None
+#
+#General notes:
+#	- Starting to work!
+
+import sys, os.path, time
+import subprocess as sub
+from line import Line
+
+## ------------- VARIABLES ------------- ##
+pauser=0
+allTags=False
+cur=Line('')
+c=0
+
+## ------------ FUNCTIONS -------------- ##
+def usage():
+	print('''
+\033[33mUsage:\033[0m  splitmyhtml [-ahptv] <file>
+	Splits a single HTML line into multiple
+
+\033[33mArguments:\033[0m
+	-a\t\tTests all different tag brackets
+	-h, --help\tPrints this screen
+	-p\t\tAdds a delay between fixes. Mainly for debugging
+	-t, --tag=X\tSets tags to check:\033[2m
+				Default is '<>'
+				1 is '{}'
+				2 is '()'\033[0m
+	-v, --verbose\tIncreases verbosity
+''')
+	exit(1)
+
+def error(message="Unknown Error!", exitValue=1):
+	print("\033[31m[\033[34m|\033[31mX]\033[0m Error: {}".format(message))
+	exit(exitValue)
+
+## ------------- MAIN ------------- ##
+def main():
+	"""
+	Splits a single line of HTML into many, while removing open and nested tags
+	"""
+	#Handle cmd line args
+	for i in sys.argv[1:]:
+		c+=1
+		if i=='-a':
+			allTags=True
+		elif i in ['-h', '--help']:
+			usage()
+		#Sets tag
+		elif i=='-p':
+			pauser=1
+		elif i.strip('1234567890=') in ['-t', '--tag']:
+			try:
+				if int(sys.argv[c+1])=='1':
+					cur.setSChar('{')
+					cur.setEChar('}')
+				elif int(sys.argv[c+1])=='2':
+					cur.setSChar('(')
+					cur.setEChar(')')
+			except IndexError:
+				if sys.argv[c][-1]=='1':
+					cur.setSChar('{')
+					cur.setEChar('}')
+				elif sys.argv[c][-1]=='2':
+					cur.setSChar('(')
+					cur.setEChar(')')
+			except:
+				usage()
+		elif i in ['-v', '--verbose']:
+			Line.toggleVerbose()
+		elif i[0]!='-':
+			if sys.argv[c-1] not in ['-t'] and i!=sys.argv[c]:
+				usage()
+		else:
+			error("Something went wrong, try --help")
+
+	#Figures out where to get input from
+	if os.path.isfile(sys.argv[len(sys.argv)-1]) and len(sys.argv)>1:
+		toRead=open(sys.argv[len(sys.argv)-1], 'r')
+	else:
+		toRead=sys.stdin
+		print("Reading from stdin!")
+
+if __name__=="__main__":
+	main()
