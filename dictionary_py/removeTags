@@ -1,25 +1,61 @@
 #!/usr/bin/python3
 
-import sys, time
+#Author: Owen Cocjin
+#Version: 0.1.2
+#Update notes:
+#	- Added cmd line argument handling
+#	- Fixed issue with nested tags deleting an extra letter
+#	- Fixed general bugs
+#
+#Known bugs:
+#	When using verbose, if an open tag is found, a duplicate of the "inner HTML"
+#	may be shown. This does not affect the end result
+
+import sys, time, os.path
 from line import Line
 
 ## ------------- FUNCTIONS ------------ ##
 def usage():
 	print('''
-\033[33mUsage:  \033[0mremoveTag [-th] [VALUES]
+\033[33mUsage:  \033[0mremoveTag [-achltv] [VALUES]
 \tRemoves HTML and Javascript tags from a piped line
 
 \033[33mArguments:\033[0m
-\t-t, --tag=TAG_NUMBER\tSets tags to remove:\033[2m
-\t\t\t\tDefault is '<>'
-\t\t\t\t1 is '{}'\033[0m
-\t-h, --help\tPrints this screen
+	-a\t\tStrip all tags
+	-c\t\tConverts HTML entities & to their ASCII characters
+	-h, --help\tPrints this screen
+	-l, --lines=X\tPrint X lines that are not blank
+	-t, --tag=X\tSets tags to remove:\033[2m
+				Default is '<>'
+				1 is '{}'
+				2 is '()'\033[0m
+	-v\t\tIncrease verbosity
 	''')
 	exit(1)
 
 def error(message="Unknown Error!", exitValue=1):
 	print("\033[31m[\033[34m|\033[31mX]\033[0m Error: {}".format(message))
 	exit(exitValue)
+
+def convertCharEntities(word):
+	"""
+	Converts HTML character entities to their ASCII characters
+	"""
+	charEntities={'&nbsp;':' ',
+	'&lt;':'<',
+	'&gt;':'>',
+	'&amp;':'&',
+	'&quot;':'"',
+	'&apos;':'\'',
+	'&cent;':'¢',
+	'&pound;':'£',
+	'&yen;':'¥',
+	'&euro;':'€',
+	'&copy;':'©',
+	'&reg;':'®'}
+	for i in charEntities:
+		word=word.replace(i, charEntities[i])
+	return(word)
 
 ## -------------------- MAIN -------------------- ##
 def main():
@@ -28,14 +64,16 @@ def main():
 	curLine=1
 	stripped=Line('')
 	allTags=False
+	convert=False
+	toRead=''
 
 	#Parse arguments
 	for i in range(1, len(sys.argv)):
+		#Sets tag
 		if sys.argv[i].strip('1234567890=') in ['-t', '--tag']:
 			try:
 				if sys.argv[i+1]=='1':
 					stripped=Line('', '{', '}')
-					continue
 				elif sys.argv[i+1]=='2':
 					stripped=Line('', '(', ')')
 			except IndexError:
@@ -45,12 +83,24 @@ def main():
 					stripped=Line('', '(', ')')
 			except:
 				usage()
+
+		#Prints help
 		elif sys.argv[i] in ['-h', '--help']:
 			usage()
+
+		#Sets verbosity
 		elif sys.argv[i]=='-v':
 			Line.toggleVerbose()
+
+		#Sets all tags
 		elif sys.argv[i]=='-a':
 			allTags=True
+
+		#Sets converter
+		elif sys.argv[i]=='-c':
+			convert=True
+
+		#Sets lines to print
 		elif sys.argv[i].strip('1234567890=') in ['-l', '--lines']:
 			pos=sys.argv[i].find('=')
 			if pos==-1:
@@ -67,15 +117,28 @@ def main():
 					error("Something went wrong. Try using --help")
 				except:
 					usage()
+
+		#Check if last argument is a file
+		elif os.path.isfile(sys.argv[len(sys.argv)-1]):
+			toRead=open(sys.argv[len(sys.argv)-1], 'r')
+
+		#Throws an error if invalid argument is detected
 		elif sys.argv[i][0]!='-':
 			if sys.argv[i-1] in ['-t', '-l']:
 				continue
 			else:
 				error("Something went wrong. Try using --help")
-		elif sys.argv[i] not in ['-t', '--test', '-h', '--help']:
+
+		#Throws error if invalud argument is detected
+		else:
 			error("Something went wrong. Try using --help")
 
-	for line in sys.stdin:
+	#Actually stripping lines
+	if toRead=='':
+		toLoop=sys.stdin
+	else:
+		toLoop=toRead
+	for line in toLoop:
 		curLine+=1
 		stripped.setLine(line)
 		if allTags:
@@ -88,6 +151,8 @@ def main():
 
 		if stripped.getLine()!="":
 			#print("Got line: {}".format(stripped))
+			if convert:
+				stripped.setLine(convertCharEntities(stripped.getLine()))
 			print(stripped, end='\n\n')
 			total-=1
 		if total==0:
